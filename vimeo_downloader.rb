@@ -1,15 +1,15 @@
 # encoding: utf-8
 
 class VimeoDownloader
-	require 'net/http'
-	require 'net/https'
-	require 'open-uri'
-	require 'fileutils'
-	require_relative 'configs'
-	# require_relative 'albums'
-	require_relative 'album_parser'
-	# require_relative 'videos'
-	require_relative 'video_parser'
+	require "net/http"
+	require "net/https"
+	require "open-uri"
+	require "fileutils"
+	require_relative "configs"
+	# require_relative "albums"
+	require_relative "album_parser"
+	# require_relative "videos"
+	require_relative "video_parser"
 
 	def initialize
 		@host = "https://api.vimeo.com"

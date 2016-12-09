@@ -1,6 +1,6 @@
 class AlbumParser
-	require 'rubygems'
-	require 'json'
+	require "rubygems"
+	require "json"
 
 	def self.collectionAsJson response
 		data = JSON.parse response.body

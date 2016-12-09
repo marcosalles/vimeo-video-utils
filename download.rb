@@ -1,13 +1,13 @@
 # encoding: utf-8
 
-require_relative 'configs'
+require_relative "configs"
 require_relative "vimeo_downloader"
 
 class Download
 
 	def initialize
 		@threads = []
-		@timeout = 15 #60*40 #40min
+		@timeout = 60*40 #40min
 		@downloader = VimeoDownloader.new
 	end
 
