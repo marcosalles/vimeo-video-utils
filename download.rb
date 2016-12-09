@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+require_relative 'configs'
 require_relative "vimeo_downloader"
 
 class Download
@@ -56,7 +57,7 @@ class Download
 					return downloadAlbum album, lastDownloaded
 				end
 				@threads << Thread.new do
-					downloadVideo albumName, video, @downloader.quality
+					downloadVideo albumName, video, Configs.quality
 				end
 				lastDownloaded += 1
 			end

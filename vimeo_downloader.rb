@@ -5,20 +5,17 @@ class VimeoDownloader
 	require 'net/https'
 	require 'open-uri'
 	require 'fileutils'
-	require_relative 'albums'
+	require_relative 'configs'
+	# require_relative 'albums'
 	require_relative 'album_parser'
-	require_relative 'videos'
+	# require_relative 'videos'
 	require_relative 'video_parser'
 
 	def initialize
 		@host = "https://api.vimeo.com"
-		@userId = ""
-		@secret = ""
+		@userId = Configs.userId
+		@secret = Configs.userSecret
 		@root = "files"
-		@quality = "hd"
-	end
-	def quality
-		@quality
 	end
 
 	def downloadVideo albumName, videoId, link
