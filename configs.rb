@@ -9,6 +9,9 @@ class Configs
 
 	def videoQuality
 		#hd, sd, source
-		""
+		"hd"
+	end
+
+	def requestThreshold
 	end
 end

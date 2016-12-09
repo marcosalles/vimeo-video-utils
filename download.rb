@@ -22,7 +22,7 @@ class Download
 			puts "Will download [#{rawAlbums[:albums].count}] albums\n"
 			hasNextPage = rawAlbums[:hasNext]
 			rawAlbums[:albums].each do |album|
-				if remaining <= 250
+				if remaining <= Configs.requestThreshold
 					puts "Waiting for request limit. Stopped at album[#{album[:id]}]..\n"
 					sleep @timeout
 					puts "Back to work!\n"
@@ -50,7 +50,7 @@ class Download
 			hasNextPage = rawVideos[:hasNext]
 			lastDownloaded = startingAtVideo
 			rawVideos[:videos].each do |video|
-				if remaining <= 250
+				if remaining <= Configs.requestThreshold
 					puts "Waiting for request limit. Stopped at album[#{album[:id]}]/video[#{video[:id]}]..\n"
 					sleep @timeout
 					puts "Back to work!\n"
