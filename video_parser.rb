@@ -1,31 +1,27 @@
 class VideoParser
 	require "rubygems"
 	require "json"
+	require "time"
 
-	def self.collectionAsJson response
+	def self.videoAsJson response
+		requestsRemaining = response["x-ratelimit-remaining"].to_i
+		return error(requestsRemaining) if response.body.downcase.include? "<html"
 		data = JSON.parse response.body
+		return error(requestsRemaining) unless data["error"].nil?
+		downloadLinks = downloadLinksFor data["download"]
+		resetInSeconds = (Time.parse(response["x-ratelimit-reset"]).utc - Time.now.utc).to_i + 1
 		{
-			page: data["page"],
-			hasNext: data["total"].to_f/data["per_page"] > data["page"],
-			requestsRemaining: response["x-ratelimit-remaining"].to_i,
-			videos: videosAsJson(data["data"])
+			duration: data["duration"],
+			requestsResetIn: resetInSeconds,
+			requestsRemaining: requestsRemaining,
+			downloadLinks: downloadLinks
 		}
 	end
 
 	private
-	def self.videosAsJson data
-		videos = []
-		data.each do |video|
-			id = video["uri"].gsub(/.*\//, "")
-			name = video["name"]
-			downloadLinks = downloadLinksFor video["download"]
-			videos << {
-				id: id,
-				name: name,
-				downloadLinks: downloadLinks
-			}
-		end
-		videos
+
+	def self.error requestsRemaining
+		{ error: true, requestsRemaining: requestsRemaining }
 	end
 
 	def self.downloadLinksFor infos

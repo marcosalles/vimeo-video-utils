@@ -15,22 +15,32 @@ class VimeoDownloader
 		@host = "https://api.vimeo.com"
 		@userId = Configs.userId
 		@secret = Configs.userSecret
-		@root = "files"
+		@root = Configs.downloadDirectory
 	end
 
-	def downloadVideo albumName, videoId, link
-		dirName = "#{@root}/#{albumName}"
-		fileName = "#{videoId}-#{link[:quality]}.mp4"
-		path = "#{dirName}/#{fileName}"
-		if link[:size] == File.size?(path)
-			puts "\tFile already downloaded: #{path}"
+	def downloadVideo courseName, videoId, link
+		begin
+			puts "\t>#{Thread.current[:id]}> Downloading video[#{videoId}] with quality[#{link[:quality]}] and fileSize[#{link[:size]/(1024*1024)}Mb]."
+			dirName = "#{@root}/#{courseName}"
+			fileName = "#{videoId}-#{link[:quality]}.mp4"
+			path = "#{dirName}/#{fileName}"
+			if link[:size] == File.size?(path)
+				puts "\t>#{Thread.current[:id]}> File already downloaded: #{path}"
+				return true
+			end
+			FileUtils::mkdir_p dirName
+			download = open(link[:uri])
+			puts "\t>#{Thread.current[:id]}> Downloaded #{path}\n"
+			IO.copy_stream(download, path)
 			return true
+		rescue
+			return false
 		end
-		FileUtils::mkdir_p dirName
-		download = open(link[:uri])
-		puts "\tDownloaded #{path}\n"
-		IO.copy_stream(download, path)
-		true
+	end
+
+	def getVideoInfo videoId
+		VideoParser.videoAsJson(requestWithPath("/users/#{@userId}/videos/#{videoId}"))
+		# VideoParser.videoAsJson(Videos.one)
 	end
 
 	def getAlbumVideos albumId, page
@@ -53,7 +63,7 @@ class VimeoDownloader
 		http = Net::HTTP.new(uri.host, uri.port)
 		http.use_ssl = true
 		http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-		puts "Making request to [#{uri.to_s}]..\n"
+		puts "\t>#{Thread.current[:id]}> Making request to [#{uri.to_s}]..\n"
 		request = Net::HTTP::Get.new(uri.to_s)
 		request.add_field "Authorization", "bearer #{@secret}"
 		http.request request

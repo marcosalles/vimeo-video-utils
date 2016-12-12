@@ -7,11 +7,19 @@ class Configs
 		""
 	end
 
-	def videoQuality
-		#hd, sd, source
-		"hd"
+	def self.videoQuality
+		["hd", "sd", "source"]
 	end
 
-	def requestThreshold
+	def self.requestThreshold
+		275
+	end
+
+	def self.threadThreshold
+		20
+	end
+
+	def self.downloadDirectory
+		"videos"
 	end
 end
