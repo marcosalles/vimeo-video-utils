@@ -1,9 +1,9 @@
 class Configs
-	def userId
+	def self.userId
 		""
 	end
 
-	def userSecret
+	def self.userSecret
 		""
 	end
 
