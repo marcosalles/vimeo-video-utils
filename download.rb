@@ -2,12 +2,14 @@
 
 require_relative "configs"
 require_relative "vimeo_downloader"
+require_relative "log"
 
 class Download
 
 	def initialize
 		@maxThreads = Configs.threadThreshold
 		@downloader = VimeoDownloader.new
+		@log = Log.logger
 	end
 
 	def downloadAlbums
@@ -17,14 +19,14 @@ class Download
 			rawAlbums = @downloader.getUserAlbums albumPage
 			albumPage = rawAlbums[:page] += 1
 			remaining = rawAlbums[:requestsRemaining]
-			puts "Remaining requests: #{remaining}\n"
-			puts "Will download [#{rawAlbums[:albums].count}] albums\n"
+			@log.info "Remaining requests: #{remaining}"
+			@log.info "Will download [#{rawAlbums[:albums].count}] albums"
 			hasNextPage = rawAlbums[:hasNext]
 			rawAlbums[:albums].each do |album|
 				if remaining <= Configs.requestThreshold
-					puts "Waiting for request limit. Stopped at album[#{album[:id]}]..\n"
+					@log.info "Waiting for request limit. Stopped at album[#{album[:id]}].."
 					sleep @timeout
-					puts "Back to work!\n"
+					@log.info "Back to work!"
 				end
 				downloadAlbum album, 0 unless album[:hasNoVideos]
 			end
@@ -39,7 +41,7 @@ class Download
 			course = line.split(" ")[0]
 			videoId = line.split(" ")[1].gsub(/.*\//, "")
 			if videoAlreadyDownloaded course, videoId
-				puts "Already downloaded file[#{course}/#{videoId}]. Skipping..\n"
+				@log.info "Already downloaded file[#{course}/#{videoId}]. Skipping.."
 			else
 				videos << {
 					course: course,
@@ -63,7 +65,7 @@ class Download
 	end
 
 	def downloadAlbum album, startingAtVideo
-		puts "Downloading album: #{album}\n"
+		@log.info "Downloading album: #{album}"
 		albumName = slug album[:name]
 		albumId = album[:id]
 		hasNextPage = true
@@ -72,22 +74,22 @@ class Download
 			rawVideos = @downloader.getAlbumVideos albumId, videoPage
 			videoPage = rawVideos[:page] += 1
 			remaining = rawVideos[:requestsRemaining]
-			puts "\nRemaining requests: #{remaining}\n"
+			@log.info "Remaining requests: #{remaining}"
 			videosToDownload = rawVideos[:videos].count
-			puts "Will download [#{videosToDownload}] videos\n"
+			@log.info "Will download [#{videosToDownload}] videos"
 			hasNextPage = rawVideos[:hasNext]
 			lastDownloaded = startingAtVideo
 			rawVideos[:videos].each_with_index do |video, index|
 				if Thread.list.size > @maxThreads
-					puts "Waiting for thread[#{Thread.list.size-1}/#{@maxThreads}] limit. Stopped at album[#{album[:id]}]/video[#{video[:id]}]..\n"
+					@log.info "Waiting for thread[#{Thread.list.size-1}/#{@maxThreads}] limit. Stopped at album[#{album[:id]}]/video[#{video[:id]}].."
 					joinThreads
-					puts "Back to work!\n"
+					@log.info "Back to work!"
 				end
 				if remaining - index <= Configs.requestThreshold
 					sleepTime = videoInfo[:requestsResetIn]
-					puts "Waiting (#{sleepTime}) for request[#{remaining - index}] limit. Stopped at album[#{album[:id]}]/video[#{video[:id]}]..\n"
+					@log.info "Waiting (#{sleepTime}) for request[#{remaining - index}] limit. Stopped at album[#{album[:id]}]/video[#{video[:id]}].."
 					sleep sleepTime
-					puts "Back to work!\n"
+					@log.info "Back to work!"
 					return downloadAlbum album, lastDownloaded
 				end
 				(Thread.new do
@@ -97,42 +99,42 @@ class Download
 			end
 		end
 		joinThreads
-		puts "Finished album[#{album[:id]}]"
+		@log.info "Finished album[#{album[:id]}]"
 	end
 
 	def downloadVideos videos
 		filteredVideos = videos.select{ |video| !video[:downloaded] }
-		puts "Downloading videos.. will download [#{filteredVideos.size}] videos\n"
+		@log.info "Downloading videos.. will download [#{filteredVideos.size}] videos"
 		filteredVideos.each do |video|
 			courseName = video[:course]
 			videoId = video[:videoId]
 			if Thread.list.size > @maxThreads
-				puts "Waiting for threads[#{Thread.list.size-1}/#{@maxThreads}] to join. Stopped at course[#{courseName}]/video[#{videoId}]..\n"
+				@log.info "Waiting for threads[#{Thread.list.size-1}/#{@maxThreads}] to join. Stopped at course[#{courseName}]/video[#{videoId}].."
 				joinThreads
-				puts "Back to work!\n"
+				@log.info "Back to work!"
 			end
 			videoInfo = @downloader.getVideoInfo videoId
 			remaining = videoInfo[:requestsRemaining]
-			puts "\nRemaining requests[#{remaining}], threads[#{Thread.list.size-1}/#{@maxThreads}]\n"
+			@log.info "Remaining requests[#{remaining}], threads[#{Thread.list.size-1}/#{@maxThreads}]"
 			if videoInfo[:error]
-				puts "\t** ERROR video[#{videoId}] might not be owned by Alura.\n"
+				@log.error "*** Video[#{videoId}] might not be owned by Alura."
 				video[:downloaded] = true
 				next
 			end
 			if remaining <= Configs.requestThreshold
 				sleepTime = videoInfo[:requestsResetIn]
-				puts "Waiting (#{sleepTime}) for request[#{remaining}] limit. Stopped at course[#{courseName}]/video[#{videoId}]..\n"
+				@log.info "Waiting (#{sleepTime}) for request[#{remaining}] limit. Stopped at course[#{courseName}]/video[#{videoId}].."
 				sleep sleepTime
-				puts "Back to work!\n"
+				@log.info "Back to work!"
 				return downloadVideos filteredVideos
 			end
-			puts "\tStarting download for video[#{courseName}/#{videoId}]..\n"
+			@log.info "  Starting download for video[#{courseName}/#{videoId}].."
 			(Thread.new do
 				video[:downloaded] = downloadVideo courseName, videoInfo, videoId
 			end)[:id] = "video[#{videoId}]"
 		end
 		joinThreads
-		puts "Finished downloading all videos!\n"
+		@log.info "Finished downloading all videos!"
 	end
 
 	def downloadVideo courseName, video, videoId
@@ -142,10 +144,10 @@ class Download
 				return true if downloaded
 				if link[:quality].downcase.eql? quality
 					downloaded ||= @downloader.downloadVideo courseName, videoId, link
-					puts "\t>#{Thread.current[:id]}> Failed to download video[#{videoId}][#{quality}].\n" if !downloaded
+					@log.info "  #{Thread.current[:id]}>> Failed to download video[#{videoId}][#{quality}]." if !downloaded
 				end
 			end
-			puts "\t>#{Thread.current[:id]}> Failed to download video[#{videoId}][#{quality}]. Quality not found.\n"
+			@log.info "  #{Thread.current[:id]}>> Failed to download video[#{videoId}][#{quality}]. Quality not found."
 		end
 		downloaded
 	end
