@@ -36,18 +36,31 @@ class Download
 		content.gsub! /\r\n?/, "\n"
 		videos = []
 		content.each_line do |line|
-
 			course = line.split(" ")[0]
 			videoId = line.split(" ")[1].gsub(/.*\//, "")
-			videos << {
-				course: course,
-				videoId: videoId,
-				downloaded: false
-			}
+			if videoAlreadyDownloaded course, videoId
+				puts "Already downloaded file[#{course}/#{videoId}]. Skipping..\n"
+			else
+				videos << {
+					course: course,
+					videoId: videoId,
+					downloaded: false
+				}
+			end
 		end
 		downloadVideos videos
 	end
 	private
+
+	def videoAlreadyDownloaded course, videoId
+		dirName = "#{Configs.downloadDirectory}/#{course}"
+		fileName = "#{videoId}"
+		Configs.videoQuality.each do |quality|
+			path = "#{dirName}/#{fileName}-#{quality}.mp4"
+			return true if File.file?(path)
+		end
+		false
+	end
 
 	def downloadAlbum album, startingAtVideo
 		puts "Downloading album: #{album}\n"
