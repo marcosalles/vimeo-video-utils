@@ -23,8 +23,9 @@ class VimeoDownloader
 	def downloadVideo courseName, videoId, link
 		begin
 			@log.info "  #{Thread.current[:id]}>> Downloading video[#{videoId}] with quality[#{link[:quality]}] and fileSize[#{link[:size]/(1024*1024)}Mb]."
+			ext = link[:uri].downcase.strip.gsub(" ", "-").gsub(/.*\./, "")
 			dirName = "#{@root}/#{courseName}"
-			fileName = "#{videoId}-#{link[:quality]}.mp4"
+			fileName = "#{videoId}-#{link[:quality]}.#{ext}"
 			path = "#{dirName}/#{fileName}"
 			if link[:size] == File.size?(path)
 				@log.info "  #{Thread.current[:id]}>> File already downloaded: #{path}"
