@@ -1,14 +1,13 @@
-class Configs
-	def self.userId
-		""
-	end
+# encoding: utf-8
 
-	def self.userSecret
+class Configs
+	def self.vimeoSecret
 		""
 	end
 
 	def self.videoQuality
-		["hd", "sd", "source"]
+		return ["source", "hd", "sd", "mobile"] if self.storageUnit == "glacier"
+		["hd", "sd", "source", "mobile"]
 	end
 
 	def self.requestThreshold
@@ -20,6 +19,28 @@ class Configs
 	end
 
 	def self.downloadDirectory
-		"videos"
+		"../downloads/#{self.storageUnit}"
 	end
+
+	def self.awsId
+		""
+	end
+
+	def self.awsSecret
+		""
+	end
+
+	def self.region
+		""
+	end
+
+	def self.storageUnit
+		"s3"
+		# "glacier"
+	end
+
+	def self.storageRoot
+		""
+	end
+
 end

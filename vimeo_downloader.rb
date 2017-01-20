@@ -14,8 +14,7 @@ class VimeoDownloader
 
 	def initialize
 		@host = "https://api.vimeo.com"
-		@userId = Configs.userId
-		@secret = Configs.userSecret
+		@secret = Configs.vimeoSecret
 		@root = Configs.downloadDirectory
 		@log = Log.logger
 	end
@@ -42,8 +41,7 @@ class VimeoDownloader
 	end
 
 	def getVideoInfo videoId
-		VideoParser.videoAsJson(requestWithPath("/users/#{@userId}/videos/#{videoId}"))
-		# VideoParser.videoAsJson(Videos.one)
+		VideoParser.videoAsJson(requestWithPath("/me/videos/#{videoId}"))
 	end
 
 	def getAlbumVideos albumId, page
@@ -51,7 +49,7 @@ class VimeoDownloader
 	end
 
 	def getUserAlbums page
-		AlbumParser.collectionAsJson(requestWithPath("/users/#{@userId}/albums", page))
+		AlbumParser.collectionAsJson(requestWithPath("/me/albums", page))
 	end
 
 	private

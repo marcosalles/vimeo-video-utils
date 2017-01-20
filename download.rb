@@ -157,7 +157,7 @@ class Download
 	end
 
 	def joinThreads
-		Thread.list.each{ |t| t.join unless t == Thread.current}
+		Thread.list.each{|t| t.join unless t == Thread.current}
 	end
 end
 
