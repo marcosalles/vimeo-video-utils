@@ -3,30 +3,30 @@
 class AmazonUploader
 	require "aws-sdk"
 	require "fileutils"
-	require_relative "configs"
 	require_relative "s3_uploader"
 	require_relative "glacier_uploader"
 
-	def initialize
+	def initialize awsId, awsSecret, awsRegion, storageUnit
 		Aws.config.update({
-			region: Configs.region,
-			credentials: Aws::Credentials.new(Configs.awsId, Configs.awsSecret)
+			region: awsRegion,
+			credentials: Aws::Credentials.new(awsId, awsSecret)
 		})
 
-		@uploader = S3Uploader.new if Configs.storageUnit == "s3"
-		@uploader = GlacierUploader.new if Configs.storageUnit == "glacier"
+		@uploader = Object.const_get("#{storageUnit}Uploader").new
 	end
 
-	def uploadAllFiles
-		dir = "#{Configs.downloadDirectory}/"
-		files = Dir.glob("#{dir}**/*").select{ |e| File.file? e }
-		files.each do |originalFile|
-			file = originalFile.gsub("#{dir}", "")
-			# @uploader.upload IO.binread(originalFile), file
+	def upload absoluteFilePath, fileName, vaultOrBucket
+		@uploader.upload IO.binread(absoluteFilePath), fileName, vaultOrBucket
+	end
+
+	private
+
+	def uploadAllFilesFromTo dir, vaultOrBucket
+		files = Dir.glob("#{dir}/**/*").select{ |e| File.file? e }
+		files.each do |absoluteFilePath|
+			fileName = absoluteFilePath.gsub("#{dir}", "")
+			@uploader.upload IO.binread(absoluteFilePath), fileName, vaultOrBucket
 		end
 	end
 
-	def upload file, fileName
-		@uploader.upload file, fileName
-	end
 end

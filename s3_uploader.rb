@@ -2,17 +2,15 @@
 
 class S3Uploader
 	require "aws-sdk"
-	require "fileutils"
-	require_relative "configs"
 
 	def initialize
 		@client = Aws::S3::Client.new
 	end
 
-	def upload file, fileName
+	def upload file, fileName, bucket
 		@client.put_object(
 			body: file,
-			bucket: Configs.storageRoot,
+			bucket: bucket,
 			key: fileName
 		)
 	end

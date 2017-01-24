@@ -2,16 +2,15 @@
 
 class GlacierUploader
 	require "aws-sdk"
-	require_relative "configs"
 
 	def initialize
 		@client = Aws::Glacier::Client.new
 	end
 
-	def upload file, fileName
+	def upload file, fileName, vault
 		@client.upload_archive(
 			body: file,
-			vault_name: Configs.storageRoot,
+			vault_name: vault,
 			archive_description: fileName
 		)
 	end

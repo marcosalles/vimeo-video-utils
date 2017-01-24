@@ -5,13 +5,16 @@ class Configs
 		""
 	end
 
-	def self.videoQuality
-		return ["source", "hd", "sd", "mobile"] if self.storageUnit == "glacier"
+	def self.s3Quality
 		["hd", "sd", "source", "mobile"]
 	end
 
+	def self.glacierQuality
+		["source", "hd", "sd", "mobile"]
+	end
+
 	def self.requestThreshold
-		275
+		200
 	end
 
 	def self.threadThreshold
@@ -19,7 +22,7 @@ class Configs
 	end
 
 	def self.downloadDirectory
-		"../downloads/#{self.storageUnit}"
+		"../downloads"
 	end
 
 	def self.awsId
@@ -30,17 +33,16 @@ class Configs
 		""
 	end
 
-	def self.region
-		""
-	end
-
-	def self.storageUnit
-		"s3"
-		# "glacier"
+	def self.awsRegion
+		"us-east-1"
 	end
 
 	def self.storageRoot
-		""
+		"bucket-or-vault"
+	end
+
+	def self.logFile
+		"../backup.log"
 	end
 
 end

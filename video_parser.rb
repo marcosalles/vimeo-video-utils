@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 class VideoParser
 	require "rubygems"
 	require "json"
@@ -30,8 +32,6 @@ class VideoParser
 			links << {
 				quality: info["quality"],
 				type: info["type"],
-				width: info["width"],
-				height: info["height"],
 				uri: info["link"],
 				size: info["size"],
 				md5: info["md5"]
