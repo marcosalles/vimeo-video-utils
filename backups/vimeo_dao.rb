@@ -52,18 +52,18 @@ class VimeoDAO
 	def downloadVideo video, link
 		begin
 			path = fileNameFor(video, link)
-			@log.info "  #{Thread.current[:id]}>> Downloading video[#{video[:id]}] with quality[#{link[:quality]}] and fileSize[#{link[:size]/(1024*1024)}Mb]."
+			@log.info "Downloading video[#{video[:id]}] with quality[#{link[:quality]}] and fileSize[#{link[:size]/(1024*1024)}Mb]."
 			if link[:size] == File.size?(path)
-				@log.info "  #{Thread.current[:id]}>> File already downloaded: #{path}"
+				@log.info "File already downloaded: #{path}"
 				return path
 			end
 			FileUtils::mkdir_p "#{@root}/#{video[:path]}"
 			download = open(link[:uri])
-			@log.info "  #{Thread.current[:id]}>> Downloaded #{path}"
+			@log.info "Downloaded #{path}"
 			IO.copy_stream(download, path)
 			return path
 		rescue
-			@log.error "  #{Thread.current[:id]}>> *** Download for #{path} failed!"
+			@log.error "*** Download for #{path} failed!"
 		end
 		return nil
 	end
@@ -78,7 +78,7 @@ class VimeoDAO
 		http = Net::HTTP.new uri.host, uri.port
 		http.use_ssl = true
 		http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-		@log.info "  #{Thread.current[:id]}>> Making request to [#{uri.to_s}].."
+		@log.info "Making request to [#{uri.to_s}].."
 		request = Net::HTTP::Get.new uri.to_s
 		request.add_field "Authorization", "bearer #{@secret}"
 		http.request request

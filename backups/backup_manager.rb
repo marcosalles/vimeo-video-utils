@@ -3,11 +3,13 @@
 class BackupManager
 	require_relative "vimeo_dao"
 	require_relative "local_dao"
+	require_relative "amazon_dao"
 
 	def initialize
 		@log = Log.logger
 		@vimeoDao = VimeoDAO.new
 		@localDao = LocalDAO.new
+		@amazonDao = AmazonDAO.new
 		@maxThreads = Configs.threadThreshold
 		@requestThreshold = Configs.requestThreshold
 		@root = Configs.downloadDirectory
@@ -44,7 +46,7 @@ class BackupManager
 			if remaining <= @requestThreshold
 				sleepTime = info[:requestsResetIn]
 				@log.info "Waiting (#{sleepTime}) for request[#{remaining}] limit. Stopped at [#{path}]/video[#{id}].."
-				sleep sleepTime
+				sleep sleepTime/10
 				@log.info "Back to work!"
 				return backup filteredVideos
 			end
@@ -66,14 +68,17 @@ class BackupManager
 	def backupVideo video, info
 		s3FilePath = @vimeoDao.downloadForS3 video, info
 		if !s3FilePath.nil?
-			@amazonDao.uploadToS3 s3FilePath, s3FilePath.gsub(/#{@root}/, ""), Configs.storageRoot
+			@amazonDao.uploadToS3 s3FilePath, s3FilePath.gsub(/#{@root}\//, ""), Configs.storageRoot if Configs.uploadFiles
 			glacierFilePath = @vimeoDao.downloadForGlacier video, info
-			if !glacierFilePath.nil?
-				# @amazonDao.uploadToGlacier glacierFilePath, glacierFilePath.gsub(/#{@root}/, ""), Configs.storageRoot
+			if !glacierFilePath.nil? && Configs.uploadFiles
+				@amazonDao.uploadToGlacier glacierFilePath, glacierFilePath.gsub(/#{@root}/, ""), Configs.storageRoot
 			end
 		end
-		@localDao.deleteFile "#{s3FilePath}"
-		@localDao.deleteFile "#{glacierFilePath}"
+		if Configs.uploadFiles
+			@localDao.deleteFile "#{s3FilePath}"
+			@localDao.deleteFile "#{glacierFilePath}"
+			@localDao.deleteFolder "#{@root}/#{video[:path]}"
+		end
 	end
 
 	def joinThreads
@@ -83,4 +88,4 @@ class BackupManager
 end
 
 
-BackupManager.new.backupFromFile "resources/videos.txt"
+BackupManager.new.backupFromFile "../resources/videos.txt"

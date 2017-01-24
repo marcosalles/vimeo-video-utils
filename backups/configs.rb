@@ -38,11 +38,15 @@ class Configs
 	end
 
 	def self.storageRoot
-		"bucket-or-vault"
+		""
 	end
 
 	def self.logFile
 		"../backup.log"
+	end
+
+	def self.uploadFiles
+		false
 	end
 
 end

@@ -1,10 +1,11 @@
 # encoding: utf-8
 
 class LocalDAO
+	require "fileutils"
 
 	def initialize
 		@log = Log.logger
-		@backedUpFileName = "resources/backedUpIds.txt"
+		@backedUpFileName = "../resources/backedUpIds.txt"
 	end
 
 	def filteredVideosFromFile fileName
@@ -37,10 +38,14 @@ class LocalDAO
 	end
 
 	def deleteFile path
-		# File.delete(path) if File.exist?(path)
+		File.delete(path) if File.exists?(path)
 		@log.info "Deleted file #{path}"
 	end
 
+	def deleteFolder path
+		FileUtils::rmdir(path) if Dir.exists?(path) && Dir.entries(path).size <= 2
+		@log.info "Deleted folder #{path}"
+	end
 
 	private
 
